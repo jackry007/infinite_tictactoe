@@ -38,11 +38,25 @@ selected_piece = None
 x_pieces, o_pieces = [], []  # Store positions of X and O pieces
 game_over = False
 
+
 def draw_lines():
     # Draw horizontal and vertical lines
     for i in range(1, GRID_SIZE):
-        pygame.draw.line(screen, LINE_COLOR, (0, i * CELL_SIZE), (SCREEN_SIZE, i * CELL_SIZE), LINE_WIDTH)
-        pygame.draw.line(screen, LINE_COLOR, (i * CELL_SIZE, 0), (i * CELL_SIZE, SCREEN_SIZE), LINE_WIDTH)
+        pygame.draw.line(
+            screen,
+            LINE_COLOR,
+            (0, i * CELL_SIZE),
+            (SCREEN_SIZE, i * CELL_SIZE),
+            LINE_WIDTH,
+        )
+        pygame.draw.line(
+            screen,
+            LINE_COLOR,
+            (i * CELL_SIZE, 0),
+            (i * CELL_SIZE, SCREEN_SIZE),
+            LINE_WIDTH,
+        )
+
 
 def draw_pieces():
     for row in range(GRID_SIZE):
@@ -53,26 +67,58 @@ def draw_pieces():
             elif piece == "O":
                 draw_o(col * CELL_SIZE, row * CELL_SIZE)
 
+
 def draw_x(x, y):
     # Draw X
-    pygame.draw.line(screen, CROSS_COLOR, (x + SPACE, y + SPACE), (x + CELL_SIZE - SPACE, y + CELL_SIZE - SPACE), CROSS_WIDTH)
-    pygame.draw.line(screen, CROSS_COLOR, (x + SPACE, y + CELL_SIZE - SPACE), (x + CELL_SIZE - SPACE, y + SPACE), CROSS_WIDTH)
+    pygame.draw.line(
+        screen,
+        CROSS_COLOR,
+        (x + SPACE, y + SPACE),
+        (x + CELL_SIZE - SPACE, y + CELL_SIZE - SPACE),
+        CROSS_WIDTH,
+    )
+    pygame.draw.line(
+        screen,
+        CROSS_COLOR,
+        (x + SPACE, y + CELL_SIZE - SPACE),
+        (x + CELL_SIZE - SPACE, y + SPACE),
+        CROSS_WIDTH,
+    )
+
 
 def draw_o(x, y):
     # Draw O
-    pygame.draw.circle(screen, CIRCLE_COLOR, (x + CELL_SIZE // 2, y + CELL_SIZE // 2), CIRCLE_RADIUS, CIRCLE_WIDTH)
+    pygame.draw.circle(
+        screen,
+        CIRCLE_COLOR,
+        (x + CELL_SIZE // 2, y + CELL_SIZE // 2),
+        CIRCLE_RADIUS,
+        CIRCLE_WIDTH,
+    )
+
 
 def highlight_piece(row, col):
     """Darken the background of the selected piece to indicate it's the one to be moved."""
-    pygame.draw.rect(screen, HIGHLIGHT_COLOR, (col * CELL_SIZE, row * CELL_SIZE, CELL_SIZE, CELL_SIZE))
+    pygame.draw.rect(
+        screen,
+        HIGHLIGHT_COLOR,
+        (col * CELL_SIZE, row * CELL_SIZE, CELL_SIZE, CELL_SIZE),
+    )
+
 
 def check_winner():
     # Check rows, columns and diagonals for a win
     for row in range(GRID_SIZE):
-        if board[row][0] == board[row][1] == board[row][2] and board[row][0] is not None:
+        if (
+            board[row][0] == board[row][1] == board[row][2]
+            and board[row][0] is not None
+        ):
             return board[row][0]
     for col in range(GRID_SIZE):
-        if board[0][col] == board[1][col] == board[2][col] and board[0][col] is not None:
+        if (
+            board[0][col] == board[1][col] == board[2][col]
+            and board[0][col] is not None
+        ):
             return board[0][col]
     if board[0][0] == board[1][1] == board[2][2] and board[0][0] is not None:
         return board[0][0]
@@ -80,18 +126,30 @@ def check_winner():
         return board[0][2]
     return None
 
+
 def switch_player():
     global player
     player = "O" if player == "X" else "X"
 
+
 def move_piece(old_row, old_col, new_row, new_col):
-    global move_phase, selected_piece
+    global move_phase, selected_piece, x_pieces, o_pieces
     if board[new_row][new_col] is None:
         board[new_row][new_col] = board[old_row][old_col]
         board[old_row][old_col] = None
+
+        # Update the list of pieces
+        if board[new_row][new_col] == "X":
+            x_pieces.remove((old_row, old_col))  # Remove the old position
+            x_pieces.append((new_row, new_col))  # Add the new position
+        elif board[new_row][new_col] == "O":
+            o_pieces.remove((old_row, old_col))  # Remove the old position
+            o_pieces.append((new_row, new_col))  # Add the new position
+
         move_phase = False
         selected_piece = None
         switch_player()
+
 
 def handle_click(x, y):
     global move_phase, selected_piece, x_pieces, o_pieces
@@ -110,8 +168,6 @@ def handle_click(x, y):
                 else:
                     # Randomly select one of X's pieces to move
                     selected_piece = random.choice(x_pieces)
-                    x_pieces.remove(selected_piece)
-                    x_pieces.append((row, col))  # Add the new position to the list
                     move_phase = True
             elif player == "O":
                 if len(o_pieces) < 3:
@@ -120,11 +176,10 @@ def handle_click(x, y):
                 else:
                     # Randomly select one of O's pieces to move
                     selected_piece = random.choice(o_pieces)
-                    o_pieces.remove(selected_piece)
-                    o_pieces.append((row, col))  # Add the new position to the list
                     move_phase = True
             if not move_phase:
                 switch_player()
+
 
 def reset_game():
     global board, player, move_phase, selected_piece, x_pieces, o_pieces, game_over
@@ -134,6 +189,7 @@ def reset_game():
     selected_piece = None
     x_pieces, o_pieces = [], []
     game_over = False
+
 
 # Game loop
 running = True
