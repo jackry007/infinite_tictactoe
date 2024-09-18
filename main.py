@@ -16,12 +16,12 @@ CROSS_WIDTH = 25
 SPACE = CELL_SIZE // 4
 
 # Define colors
-BG_COLOR = (0, 0, 0)  # Black
-LINE_COLOR = (120, 6, 6)  # Blood Red
-CIRCLE_COLOR = (4, 193, 226)  # Light Blue
-CROSS_COLOR = (225, 225, 20)  # Piss Yellow
-HIGHLIGHT_COLOR = (150, 150, 150)  # Highlight color for the selected piece
-TEXT_COLOR = (255, 255, 255)  # White for text
+BG_COLOR = (240, 240, 240)  # Soft light gray background
+LINE_COLOR = (200, 200, 200)  # Soft gray for grid lines
+CIRCLE_COLOR = (100, 149, 237)  # Cornflower blue for O
+CROSS_COLOR = (233, 87, 63)  # Soft coral for X
+HIGHLIGHT_COLOR = (255, 255, 102)  # Soft yellow for highlighting pieces
+TEXT_COLOR = (50, 50, 50)  # Dark gray for text
 
 
 # Function to dynamically adjust fonts based on screen size
@@ -213,27 +213,46 @@ def handle_click(x, y):
 
 # Reset the game state
 def reset_game():
-    global board, player, move_phase, selected_piece, game_over, game_started
+    global board, player, move_phase, selected_piece, game_over, game_started, x_pieces, o_pieces
     board = [[None for _ in range(GRID_SIZE)] for _ in range(GRID_SIZE)]
     player = "X"
     move_phase = False
     selected_piece = None
     game_over = False
-    game_started = False
+    game_started = True  # Start the game immediately after reset
+    x_pieces = []
+    o_pieces = []
 
 
 # Draw the starting screen
 def draw_start_screen():
     screen.fill(BG_COLOR)
+
+    # Title
     title_text = fonts["large"].render("INFINITE ", True, TEXT_COLOR)
     title_text_2 = fonts["large"].render("TIC-TAC-TOE ", True, TEXT_COLOR)
     screen.blit(title_text, (SCREEN_SIZE // 4, SCREEN_SIZE // 4))
     screen.blit(title_text_2, (SCREEN_SIZE // 4, SCREEN_SIZE // 3))
 
+    # Start prompt
     start_text = fonts["medium"].render("Press SPACE to Start", True, TEXT_COLOR)
     screen.blit(start_text, (SCREEN_SIZE // 4, SCREEN_SIZE // 2))
-    
-    
+
+    # Rules
+    rules_text = [
+        "-  The board is a standard 3x3 Tic-Tac-Toe grid.",
+        "-  Players alternate turns, starting with 'X'.",
+        "-  Each player can only have 3 pieces on the board.",
+        "-  After 3 pieces, an existing piece is randomly selected",
+        "   to move to an open spot.",
+        "-  A player wins by forming a straight line of three pieces",
+        "   horizontally, vertically, or diagonally.",
+    ]
+
+    for i, line in enumerate(rules_text):
+        rule = fonts["small"].render(line, True, TEXT_COLOR)
+        screen.blit(rule, (SCREEN_SIZE // 10, SCREEN_SIZE // 2 + (i + 2) * 30))
+
     pygame.display.flip()
 
 
@@ -255,6 +274,11 @@ def draw_end_screen(winner):
     restart_text = fonts["small"].render("Press R to Restart", True, TEXT_COLOR)
     screen.blit(restart_text, (SCREEN_SIZE // 4, SCREEN_SIZE * 3 // 4))
     pygame.display.flip()
+
+
+def draw_turn_indicator():
+    turn_text = fonts["small"].render(f"{player}'s Turn", True, TEXT_COLOR)
+    screen.blit(turn_text, (10, 10))
 
 
 # Game loop
@@ -286,6 +310,8 @@ while running:
         screen.fill(BG_COLOR)
         draw_lines()
         draw_pieces()
+        draw_turn_indicator()
+
         if move_phase and selected_piece:
             highlight_piece(selected_piece[0], selected_piece[1])
 
