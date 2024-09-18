@@ -6,7 +6,7 @@ import random
 pygame.init()
 
 # Set up the game window
-SCREEN_SIZE = 600
+SCREEN_SIZE = 800
 GRID_SIZE = 3
 CELL_SIZE = SCREEN_SIZE // GRID_SIZE
 LINE_WIDTH = 5
@@ -23,6 +23,34 @@ CROSS_COLOR = (225, 225, 20)  # Piss Yellow
 HIGHLIGHT_COLOR = (150, 150, 150)  # Highlight color for the selected piece
 TEXT_COLOR = (255, 255, 255)  # White for text
 
+
+# Function to dynamically adjust fonts based on screen size
+def get_fonts():
+    large_font_size = SCREEN_SIZE // 8
+    medium_font_size = SCREEN_SIZE // 16
+    small_font_size = SCREEN_SIZE // 24
+    return {
+        "large": pygame.font.Font(None, large_font_size),
+        "medium": pygame.font.Font(None, medium_font_size),
+        "small": pygame.font.Font(None, small_font_size),
+    }
+
+
+# Function to dynamically adjust sizes based on screen size
+def get_dynamic_sizes():
+    global CELL_SIZE, LINE_WIDTH, CIRCLE_WIDTH, CROSS_WIDTH, SPACE, CIRCLE_RADIUS
+    CELL_SIZE = SCREEN_SIZE // GRID_SIZE
+    LINE_WIDTH = SCREEN_SIZE // 120
+    CIRCLE_WIDTH = SCREEN_SIZE // 40
+    CROSS_WIDTH = SCREEN_SIZE // 24
+    SPACE = CELL_SIZE // 4
+    CIRCLE_RADIUS = CELL_SIZE // 3
+
+
+# Initialize dynamic sizes and fonts
+get_dynamic_sizes()
+fonts = get_fonts()
+
 # Create the screen object
 screen = pygame.display.set_mode((SCREEN_SIZE, SCREEN_SIZE))
 pygame.display.set_caption("Infinite Tic-Tac-Toe")
@@ -37,6 +65,8 @@ move_phase = False
 selected_piece = None
 x_pieces, o_pieces = [], []  # Store positions of X and O pieces
 game_over = False
+game_started = False
+score = {"X": 0, "O": 0}  # Track the score of both players
 
 
 def draw_lines():
@@ -181,46 +211,88 @@ def handle_click(x, y):
                 switch_player()
 
 
+# Reset the game state
 def reset_game():
-    global board, player, move_phase, selected_piece, x_pieces, o_pieces, game_over
+    global board, player, move_phase, selected_piece, game_over, game_started
     board = [[None for _ in range(GRID_SIZE)] for _ in range(GRID_SIZE)]
     player = "X"
     move_phase = False
     selected_piece = None
-    x_pieces, o_pieces = [], []
     game_over = False
+    game_started = False
+
+
+# Draw the starting screen
+def draw_start_screen():
+    screen.fill(BG_COLOR)
+    title_text = fonts["large"].render("INFINITE ", True, TEXT_COLOR)
+    title_text_2 = fonts["large"].render("TIC-TAC-TOE ", True, TEXT_COLOR)
+    screen.blit(title_text, (SCREEN_SIZE // 4, SCREEN_SIZE // 4))
+    screen.blit(title_text_2, (SCREEN_SIZE // 4, SCREEN_SIZE // 3))
+
+    start_text = fonts["medium"].render("Press SPACE to Start", True, TEXT_COLOR)
+    screen.blit(start_text, (SCREEN_SIZE // 4, SCREEN_SIZE // 2))
+    
+    
+    pygame.display.flip()
+
+
+# Draw the end screen
+def draw_end_screen(winner):
+    screen.fill(BG_COLOR)
+    if winner:
+        end_text = fonts["large"].render(f"{winner} Wins!", True, TEXT_COLOR)
+    else:
+        end_text = fonts["large"].render("It's a Draw!", True, TEXT_COLOR)
+
+    screen.blit(end_text, (SCREEN_SIZE // 4, SCREEN_SIZE // 4))
+
+    score_text = fonts["medium"].render(
+        f"Score: X {score['X']} - O {score['O']}", True, TEXT_COLOR
+    )
+    screen.blit(score_text, (SCREEN_SIZE // 4, SCREEN_SIZE // 2))
+
+    restart_text = fonts["small"].render("Press R to Restart", True, TEXT_COLOR)
+    screen.blit(restart_text, (SCREEN_SIZE // 4, SCREEN_SIZE * 3 // 4))
+    pygame.display.flip()
 
 
 # Game loop
 running = True
 while running:
-    screen.fill(BG_COLOR)
-    draw_lines()
-    draw_pieces()
+    if not game_started:
+        draw_start_screen()
 
-    # Highlight the piece selected for movement
-    if move_phase and selected_piece:
-        highlight_piece(selected_piece[0], selected_piece[1])
+    if game_over:
+        draw_end_screen(check_winner())
 
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             pygame.quit()
             sys.exit()
 
-        if event.type == pygame.MOUSEBUTTONDOWN and not game_over:
-            x, y = pygame.mouse.get_pos()
-            handle_click(x, y)
+        if event.type == pygame.KEYDOWN:
+            if not game_started and event.key == pygame.K_SPACE:
+                game_started = True
+            if game_over and event.key == pygame.K_r:
+                reset_game()
 
-        if event.type == pygame.KEYDOWN and game_over:
-            reset_game()
+        if game_started and not game_over:
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                x, y = pygame.mouse.get_pos()
+                handle_click(x, y)
 
-    winner = check_winner()
-    if winner and not game_over:
+    if game_started and not game_over:
         screen.fill(BG_COLOR)
-        text = font.render(f"{winner} wins!", True, TEXT_COLOR)
-        screen.blit(text, (SCREEN_SIZE // 3, SCREEN_SIZE // 2))
-        pygame.display.flip()
-        pygame.time.wait(2000)
-        game_over = True
+        draw_lines()
+        draw_pieces()
+        if move_phase and selected_piece:
+            highlight_piece(selected_piece[0], selected_piece[1])
+
+        winner = check_winner()
+        if winner or all(cell is not None for row in board for cell in row):
+            game_over = True
+            if winner:
+                score[winner] += 1
 
     pygame.display.flip()
