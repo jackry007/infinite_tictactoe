@@ -61,13 +61,13 @@ font = pygame.font.Font(None, 60)
 # Board initialization
 board = [[None for _ in range(GRID_SIZE)] for _ in range(GRID_SIZE)]
 player = "X"
+starting_player = "X"  # Keep track of who starts the game (X or O)
 move_phase = False
 selected_piece = None
 x_pieces, o_pieces = [], []  # Store positions of X and O pieces
 game_over = False
 game_started = False
-score = {"X": 0, "O": 0}  # Track the score of both players
-
+score = {"Player 1": 0, "Player 2": 0}  # Track the score of both players
 
 # Load the start screen image
 start_screen_image = pygame.image.load("rule_page.png")
@@ -75,20 +75,14 @@ start_screen_image = pygame.image.load("rule_page.png")
 
 def draw_start_screen():
     screen.fill(BG_COLOR)  # Clear screen with background color (optional)
-
-    # Scale the image to fit the screen size
     scaled_image = pygame.transform.scale(
         start_screen_image, (SCREEN_SIZE, SCREEN_SIZE)
     )
-
-    # Blit the image onto the screen
     screen.blit(scaled_image, (0, 0))
-
     pygame.display.flip()
 
 
 def draw_lines():
-    # Draw horizontal and vertical lines
     for i in range(1, GRID_SIZE):
         pygame.draw.line(
             screen,
@@ -117,7 +111,6 @@ def draw_pieces():
 
 
 def draw_x(x, y):
-    # Draw X
     pygame.draw.line(
         screen,
         CROSS_COLOR,
@@ -135,7 +128,6 @@ def draw_x(x, y):
 
 
 def draw_o(x, y):
-    # Draw O
     pygame.draw.circle(
         screen,
         CIRCLE_COLOR,
@@ -146,7 +138,6 @@ def draw_o(x, y):
 
 
 def highlight_piece(row, col):
-    """Darken the background of the selected piece to indicate it's the one to be moved."""
     pygame.draw.rect(
         screen,
         HIGHLIGHT_COLOR,
@@ -155,7 +146,6 @@ def highlight_piece(row, col):
 
 
 def check_winner():
-    # Check rows, columns and diagonals for a win
     for row in range(GRID_SIZE):
         if (
             board[row][0] == board[row][1] == board[row][2]
@@ -185,15 +175,12 @@ def move_piece(old_row, old_col, new_row, new_col):
     if board[new_row][new_col] is None:
         board[new_row][new_col] = board[old_row][old_col]
         board[old_row][old_col] = None
-
-        # Update the list of pieces
         if board[new_row][new_col] == "X":
             x_pieces.remove((old_row, old_col))  # Remove the old position
             x_pieces.append((new_row, new_col))  # Add the new position
         elif board[new_row][new_col] == "O":
             o_pieces.remove((old_row, old_col))  # Remove the old position
             o_pieces.append((new_row, new_col))  # Add the new position
-
         move_phase = False
         selected_piece = None
         switch_player()
@@ -203,7 +190,6 @@ def handle_click(x, y):
     global move_phase, selected_piece, x_pieces, o_pieces
     row = y // CELL_SIZE
     col = x // CELL_SIZE
-
     if move_phase:
         old_row, old_col = selected_piece
         move_piece(old_row, old_col, row, col)
@@ -214,7 +200,6 @@ def handle_click(x, y):
                     board[row][col] = player
                     x_pieces.append((row, col))
                 else:
-                    # Randomly select one of X's pieces to move
                     selected_piece = random.choice(x_pieces)
                     move_phase = True
             elif player == "O":
@@ -222,7 +207,6 @@ def handle_click(x, y):
                     board[row][col] = player
                     o_pieces.append((row, col))
                 else:
-                    # Randomly select one of O's pieces to move
                     selected_piece = random.choice(o_pieces)
                     move_phase = True
             if not move_phase:
@@ -231,9 +215,12 @@ def handle_click(x, y):
 
 # Reset the game state
 def reset_game():
-    global board, player, move_phase, selected_piece, game_over, game_started, x_pieces, o_pieces
+    global board, player, move_phase, selected_piece, game_over, game_started, x_pieces, o_pieces, starting_player
     board = [[None for _ in range(GRID_SIZE)] for _ in range(GRID_SIZE)]
-    player = "X"
+    player = starting_player  # Use the starting player for the new game
+    starting_player = (
+        "O" if starting_player == "X" else "X"
+    )  # Alternate starting player
     move_phase = False
     selected_piece = None
     game_over = False
@@ -242,28 +229,56 @@ def reset_game():
     o_pieces = []
 
 
-# Draw the end screen
+# Draw the end screen with improved formatting
 def draw_end_screen(winner):
     screen.fill(BG_COLOR)
+
+    # Display the game result (winner or draw)
     if winner:
-        end_text = fonts["large"].render(f"{winner} Wins!", True, TEXT_COLOR)
+        end_text = fonts["large"].render(
+            f"{'Player 1' if winner == 'X' else 'Player 2'} Wins!", True, TEXT_COLOR
+        )
     else:
         end_text = fonts["large"].render("It's a Draw!", True, TEXT_COLOR)
 
-    screen.blit(end_text, (SCREEN_SIZE // 4, SCREEN_SIZE // 4))
+    # Get the rectangle object to center the text
+    end_text_rect = end_text.get_rect(center=(SCREEN_SIZE // 2, SCREEN_SIZE // 4))
+    screen.blit(end_text, end_text_rect)
 
-    score_text = fonts["medium"].render(
-        f"Score: X {score['X']} - O {score['O']}", True, TEXT_COLOR
+    # Display the score
+    score_text_1 = fonts["medium"].render(
+        f"Player 1: {score['Player 1']}", True, TEXT_COLOR
     )
-    screen.blit(score_text, (SCREEN_SIZE // 4, SCREEN_SIZE // 2))
+    score_text_2 = fonts["medium"].render(
+        f"Player 2: {score['Player 2']}", True, TEXT_COLOR
+    )
 
+    # Get the rectangle objects for centering the score
+    score_text_1_rect = score_text_1.get_rect(
+        center=(SCREEN_SIZE // 2, SCREEN_SIZE // 2)
+    )
+    score_text_2_rect = score_text_2.get_rect(
+        center=(SCREEN_SIZE // 2, SCREEN_SIZE // 2 + 40)
+    )
+
+    screen.blit(score_text_1, score_text_1_rect)
+    screen.blit(score_text_2, score_text_2_rect)
+
+    # Display the restart prompt
     restart_text = fonts["small"].render("Press R to Restart", True, TEXT_COLOR)
-    screen.blit(restart_text, (SCREEN_SIZE // 4, SCREEN_SIZE * 3 // 4))
+    restart_text_rect = restart_text.get_rect(
+        center=(SCREEN_SIZE // 2, SCREEN_SIZE * 3 // 4)
+    )
+    screen.blit(restart_text, restart_text_rect)
+
     pygame.display.flip()
 
 
 def draw_turn_indicator():
-    turn_text = fonts["small"].render(f"{player}'s Turn", True, TEXT_COLOR)
+    # Show "Player 1's Turn" or "Player 2's Turn" based on who's playing
+    turn_text = fonts["small"].render(
+        f"{'Player 1' if player == 'X' else 'Player 2'}'s Turn", True, TEXT_COLOR
+    )
     screen.blit(turn_text, (10, 10))
 
 
@@ -274,7 +289,8 @@ while running:
         draw_start_screen()
 
     if game_over:
-        draw_end_screen(check_winner())
+        winner = check_winner()
+        draw_end_screen(winner)
 
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -305,6 +321,6 @@ while running:
         if winner or all(cell is not None for row in board for cell in row):
             game_over = True
             if winner:
-                score[winner] += 1
+                score["Player 1" if winner == "X" else "Player 2"] += 1
 
     pygame.display.flip()
