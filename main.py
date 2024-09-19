@@ -69,6 +69,24 @@ game_started = False
 score = {"X": 0, "O": 0}  # Track the score of both players
 
 
+# Load the start screen image
+start_screen_image = pygame.image.load("rule_page.png")
+
+
+def draw_start_screen():
+    screen.fill(BG_COLOR)  # Clear screen with background color (optional)
+
+    # Scale the image to fit the screen size
+    scaled_image = pygame.transform.scale(
+        start_screen_image, (SCREEN_SIZE, SCREEN_SIZE)
+    )
+
+    # Blit the image onto the screen
+    screen.blit(scaled_image, (0, 0))
+
+    pygame.display.flip()
+
+
 def draw_lines():
     # Draw horizontal and vertical lines
     for i in range(1, GRID_SIZE):
@@ -222,38 +240,6 @@ def reset_game():
     game_started = True  # Start the game immediately after reset
     x_pieces = []
     o_pieces = []
-
-
-# Draw the starting screen
-def draw_start_screen():
-    screen.fill(BG_COLOR)
-
-    # Title
-    title_text = fonts["large"].render("INFINITE ", True, TEXT_COLOR)
-    title_text_2 = fonts["large"].render("TIC-TAC-TOE ", True, TEXT_COLOR)
-    screen.blit(title_text, (SCREEN_SIZE // 4, SCREEN_SIZE // 4))
-    screen.blit(title_text_2, (SCREEN_SIZE // 4, SCREEN_SIZE // 3))
-
-    # Start prompt
-    start_text = fonts["medium"].render("Press SPACE to Start", True, TEXT_COLOR)
-    screen.blit(start_text, (SCREEN_SIZE // 4, SCREEN_SIZE // 2))
-
-    # Rules
-    rules_text = [
-        "-  The board is a standard 3x3 Tic-Tac-Toe grid.",
-        "-  Players alternate turns, starting with 'X'.",
-        "-  Each player can only have 3 pieces on the board.",
-        "-  After 3 pieces, an existing piece is randomly selected",
-        "   to move to an open spot.",
-        "-  A player wins by forming a straight line of three pieces",
-        "   horizontally, vertically, or diagonally.",
-    ]
-
-    for i, line in enumerate(rules_text):
-        rule = fonts["small"].render(line, True, TEXT_COLOR)
-        screen.blit(rule, (SCREEN_SIZE // 10, SCREEN_SIZE // 2 + (i + 2) * 30))
-
-    pygame.display.flip()
 
 
 # Draw the end screen
